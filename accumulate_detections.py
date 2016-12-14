@@ -1,3 +1,9 @@
+######################################################################
+#This script executes the darknet binary on each of the images within#
+#the directory provided as a command line argument, and then prints  #
+#the execution time.                                                 #
+######################################################################
+
 # import the necessary packages
 from __future__ import print_function
 from imutils import paths

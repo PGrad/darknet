@@ -1,3 +1,13 @@
+#######################################################################
+#match() matches detected enter/exit image filenames with             #
+#correct enter/exit image filenames to calculate accuracy and         #
+#false positive rates, which are returned from match().               #
+#The CSVs containing the filenames are provided as two command line   #
+#arguments to match(). Because the manually entered filenames did not #
+#include their file prefixes, prefix is passed as an arg to match() to#
+#remove the file prefix from the detected enter/exit filenames.       #
+#######################################################################
+
 from sys import argv
 
 def match(prefix,testFN,expectedFN):
