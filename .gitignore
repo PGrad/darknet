@@ -14,9 +14,10 @@ decaf/
 submission/
 cfg/
 darknet
+*.list
 .fuse*
 *.weights
-
+*.mp4
 # OS Generated #
 .DS_Store*
 ehthumbs.db
