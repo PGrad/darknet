@@ -488,8 +488,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
             printf("Detected!\n");
         }
        // save_image(im, "predictions");
-        //show_image(im, "predictions");
-
+        show_image(im, "predictions");
         free_image(im);
         free_image(sized);
         free(boxes);
