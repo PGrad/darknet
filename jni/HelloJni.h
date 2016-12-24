@@ -12,8 +12,8 @@ extern "C" {
  * Method:    getJniString
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_HelloJni_getJniString
-  (JNIEnv *, jobject);
+JNIEXPORT void JNICALL Java_HelloJni_getJniString
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }

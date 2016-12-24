@@ -3,9 +3,9 @@ class HelloJni {
         System.loadLibrary("HelloJni");
     }
 
-    public native String getJniString();
+    public native void getJniString(String greeting);
 
     public static void main(String[] args) {
-        System.out.println(new HelloJni().getJniString());
+        new HelloJni().getJniString("Hello");
     }
 }

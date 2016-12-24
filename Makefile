@@ -14,6 +14,7 @@ ARCH= -gencode arch=compute_20,code=[sm_20,sm_21] \
 
 VPATH=./src/
 EXEC=darknet
+SONAME=JniDarknet
 OBJDIR=./obj/
 
 CC=gcc
