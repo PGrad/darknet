@@ -7,7 +7,7 @@
 #include "demo.h"
 #include "option_list.h"
 #include "stdio.h"
-
+#include "image.h"
 #ifdef OPENCV
 #include "opencv2/highgui/highgui_c.h"
 #endif
@@ -437,9 +437,18 @@ void validate_detector_recall(char *cfgfile, char *weightfile)
     }
 }
 
-int find_enter_exit(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh)
+#ifdef OPENCV
+#include "opencv2/imgproc/imgproc_c.h"                                               $
+image get_image_from_stream(CvCapture *cap);
+
+image fetch_first_frame(char * filename) {
+    CvCapture * cap = cvCaptureFromFile(filename);
+    return get_image_from_stream(cap);
+}
+
+int ** get_rects(const char *datacfg, const char *cfgfile, const char *weightfile, const char *filename, float thresh)
 {
-    int is_enter_exit = 0;
+    int ** rects = 0;
     list *options = read_data_cfg(datacfg);
     char *name_list = option_find_str(options, "names", "data/names.list");
     char **names = get_labels(name_list);
@@ -457,16 +466,9 @@ int find_enter_exit(char *datacfg, char *cfgfile, char *weightfile, char *filena
     int j;
     float nms=.4;
     while(1){
-        if(filename){
-            strncpy(input, filename, 256);
-        } else {
-            printf("Enter Image Path: ");
-            fflush(stdout);
-            input = fgets(input, 256, stdin);
-            if(!input) return;
-            strtok(input, "\n");
-        }
-        image im = load_image_color(input,0,0);
+        assert(filename); 
+        strncpy(input, filename, 256);
+        image im = fetch_first_frame(input);
         image sized = resize_image(im, net.w, net.h);
         layer l = net.layers[net.n-1];
 
@@ -479,16 +481,21 @@ int find_enter_exit(char *datacfg, char *cfgfile, char *weightfile, char *filena
         network_predict(net, X);
         get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0);
         if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-        is_enter_exit = draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
+        rects = draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
         free_image(im);
         free_image(sized);
         free(boxes);
         free_ptrs((void **)probs, l.w*l.h*l.n);
         if (filename) break;
     }
-    return is_enter_exit;
+    return rects;
 }
-
+#else
+int ** find_enter_exit(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh) {
+    fprintf(stderr, "Compilation with OpenCV is needed to fetch webcam images.\n");
+    return 0;
+}
+#endif
 void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh)
 {
     list *options = read_data_cfg(datacfg);
@@ -507,7 +514,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     char *input = buff;
     int j;
     float nms=.4;
-    FILE *fp = fopen("/home/pgrad/Documents/Github/darknet/results.csv","a");
+    //FILE *fp = fopen("/home/pgrad/Documents/Github/darknet/results.csv","a");
     while(1){
         if(filename){
             strncpy(input, filename, 256);
@@ -532,15 +539,14 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 //        printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0);
         if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-        if(draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes)) {
-            fprintf(fp,filename);
+        draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
+           /* fprintf(fp,filename);
             fflush(fp);
             fprintf(fp,"\n");
             fflush(fp);
-            printf("Detected!\n");
-        }
+            printf("Detected!\n");*/
        // save_image(im, "predictions");
-        show_image(im, "predictions");
+        //show_image(im, "predictions");
         free_image(im);
         free_image(sized);
         free(boxes);
@@ -551,7 +557,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 #endif
         if (filename) break;
     }
-    fclose(fp);
+    //fclose(fp);
 }
 
 void run_detector(int argc, char **argv)

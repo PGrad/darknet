@@ -12,7 +12,7 @@ extern "C" {
  * Method:    Detect
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jboolean JNICALL Java_DarknetTest_Detect
+JNIEXPORT jobjectArray JNICALL Java_DarknetTest_Detect
   (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
