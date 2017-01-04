@@ -194,24 +194,28 @@
 int ** resize_rect_bounds(int ** rectBounds, int oldSize, int newSize) {
     int ** newRectBounds = calloc(newSize, sizeof(int *));
     int i, j;
-    for(i = 0; i < newSize; ++i) {
+    int minSize = oldSize > newSize ? newSize : oldSize;
+    for(i = 0; i < minSize; ++i) {
         newRectBounds[i] = calloc(NUM_CORNERS, sizeof(int));
-        if(newRectBounds[i]) { 
+        if(rectBounds[i]) { 
             for(j = 0; j < NUM_CORNERS; ++j) 
                 newRectBounds[i][j] = rectBounds[i][j];
         }
     }
     
-    free_rect_bounds(rectBounds);
+    free_rect_bounds(rectBounds, oldSize);
     return newRectBounds;
 }
 
 void free_rect_bounds(int ** rectBounds, int size) {
-    int i = 0; 
+    int i; 
     for(i = 0; i < size; ++i)                                                     
-        if(rectBounds[i])                                                            
+        if(rectBounds[i]) {                                                          
             free(rectBounds[i]);                                                                                                                                   
+            rectBounds[i] = 0;
+        } 
     free(rectBounds);                                                                
+    rectBounds = 0;
 }
 
 int ** draw_detections(image im, int num, float thresh, box *boxes, float **probs, char **names, image **alphabet, int classes)
@@ -219,7 +223,7 @@ int ** draw_detections(image im, int num, float thresh, box *boxes, float **prob
     int i;
     int capacity = 5,
         pCount = 0;
-    int ** rectBounds = (int **) calloc(pCount, sizeof(int *));
+    int ** rectBounds = (int **) calloc(capacity, sizeof(int *));
     for(i = 0; i < num; ++i){
         int class = max_index(probs[i], classes);
         float prob = probs[i][class];
@@ -243,15 +247,18 @@ int ** draw_detections(image im, int num, float thresh, box *boxes, float **prob
             box b = boxes[i];
 
             rectBounds[pCount] = (int *) calloc(NUM_CORNERS, sizeof(int));
-
-            rectBounds[pCount][0] = (b.x-b.w/2.)*im.w;
-            rectBounds[pCount][1] = (b.x+b.w/2.)*im.w;
-            rectBounds[pCount][2] = (b.y-b.h/2.)*im.h;
-            rectBounds[pCount++][3] = (b.y+b.h/2.)*im.h;
+            int left = (b.x-b.w/2.)*im.w;
+            int right = (b.x+b.w/2.)*im.w;
+            int top = (b.y-b.h/2.)*im.h;
+            int bot = (b.y+b.h/2.)*im.h;
+            rectBounds[pCount][0] = left;
+            rectBounds[pCount][1] = top;
+            rectBounds[pCount][2] = right - left;
+            rectBounds[pCount++][3] = bot - top;
            
             if (pCount == capacity)
                 rectBounds = resize_rect_bounds(rectBounds, capacity, capacity * 2);
-            /*if(left < 0) left = 0;
+            if(left < 0) left = 0;
             if(right > im.w-1) right = im.w-1;
             if(top < 0) top = 0;
             if(bot > im.h-1) bot = im.h-1;
@@ -260,9 +267,11 @@ int ** draw_detections(image im, int num, float thresh, box *boxes, float **prob
             if (alphabet) {
                 image label = get_label(alphabet, names[class], (im.h*.03)/10);
                 draw_label(im, top + width, left, label, rgb);
-            }*/
+            }
         }
     }
+    if(!pCount)
+        return 0;
     if(pCount < capacity)
         rectBounds = resize_rect_bounds(rectBounds, capacity, pCount);
     return rectBounds;
@@ -544,7 +553,6 @@ image load_image_cv(char *filename, int channels)
 image get_image_from_stream(CvCapture *cap)
 {
     IplImage* src = cvQueryFrame(cap);
-    printf("%d\n",!src);
     if (!src) return make_empty_image(0,0,0);
     image im = ipl_to_image(src);
     rgbgr_image(im);

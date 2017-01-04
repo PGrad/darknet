@@ -1,5 +1,5 @@
-GPU=1
-CUDNN=1
+GPU=0
+CUDNN=0
 OPENCV=1
 DEBUG=0
 
@@ -14,7 +14,7 @@ ARCH= -gencode arch=compute_20,code=[sm_20,sm_21] \
 
 VPATH=./src/
 EXEC=darknet
-SONAME=DarknetTest
+SONAME=ObjectDetector
 SOLIB=lib$(SONAME).so
 JNIDIR=./
 OBJDIR=./obj/
