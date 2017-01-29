@@ -438,19 +438,21 @@ void validate_detector_recall(char *cfgfile, char *weightfile)
 }
 
 #ifdef OPENCV
-#include "opencv2/imgproc/imgproc_c.h"                                               $
+#include "opencv2/imgproc/imgproc_c.h"
 image get_image_from_stream(CvCapture *cap);
 
 image fetch_first_frame(char * filename) {
     CvCapture * cap = cvCaptureFromFile(filename);
-    return get_image_from_stream(cap);
+    image im = get_image_from_stream(cap);
+    cvReleaseCapture(&cap);
+    return im;
 }
 
-int ** get_rects(const char *datacfg, const char *cfgfile, const char *weightfile, const char *filename, float thresh)
+int ** get_rects(const char *datacfg, const char *cfgfile, const char *weightfile, const char *filename, float thresh, char * prefix)
 {
     int ** rects = 0;
     list *options = read_data_cfg(datacfg);
-    char *name_list = option_find_str(options, "names", "data/names.list");
+    char *name_list = option_find_str(options, "names", strcat(prefix, "data/names.list"));
     char **names = get_labels(name_list);
 
     image **alphabet = load_alphabet();
@@ -488,14 +490,19 @@ int ** get_rects(const char *datacfg, const char *cfgfile, const char *weightfil
         free_ptrs((void **)probs, l.w*l.h*l.n);
         if (filename) break;
     }
+    free_list(options);
+    free_ptrs((void **) names, sizeof(names) / sizeof(void *));
+    free_network(net);
+    free_alphabet(alphabet);
     return rects;
 }
 #else
-int ** find_enter_exit(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh) {
+int ** get_rects(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh) {
     fprintf(stderr, "Compilation with OpenCV is needed to fetch webcam images.\n");
     return 0;
 }
 #endif
+
 void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh)
 {
     list *options = read_data_cfg(datacfg);
@@ -513,6 +520,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     char *input = buff;
     int j;
     float nms=.4;
+    int ** rects;
     //FILE *fp = fopen("/home/pgrad/Documents/Github/darknet/results.csv","a");
     while(1){
         if(filename){
@@ -538,14 +546,16 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 //        printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         get_region_boxes(l, 1, 1, thresh, probs, boxes, 0, 0);
         if (nms) do_nms_sort(boxes, probs, l.w*l.h*l.n, l.classes, nms);
-        draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
-           /* fprintf(fp,filename);
+        rects = draw_detections(im, l.w*l.h*l.n, thresh, boxes, probs, names, alphabet, l.classes);
+        if(rects)
+            free_ptrs((void **) rects, (int) sizeof(rects) / sizeof(int *));
+        /* fprintf(fp,filename);
             fflush(fp);
             fprintf(fp,"\n");
             fflush(fp);
             printf("Detected!\n");*/
        // save_image(im, "predictions");
-        //show_image(im, "predictions");
+        show_image(im, "predictions");
         free_image(im);
         free_image(sized);
         free(boxes);
@@ -557,6 +567,10 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         if (filename) break;
     }
     //fclose(fp);
+    free_ptrs((void **) names, sizeof(names) / sizeof(void *));
+    free_alphabet(alphabet);
+    free_network(net);
+    free_list(options);
 }
 
 void run_detector(int argc, char **argv)

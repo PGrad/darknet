@@ -25,7 +25,7 @@ OPTS=-Ofast
 LDFLAGS= -lm -pthread 
 COMMON= 
 SOINCLUDES= -I/usr/lib/jvm/default-java/include -I/usr/lib/jvm/default-java/include/linux
-CFLAGS=-Wall -Wfatal-errors -fPIC
+CFLAGS=-Wall -Wfatal-errors -fPIC -g
 SOCFLAGS= -shared
 
 ifeq ($(DEBUG), 1) 
@@ -37,8 +37,8 @@ CFLAGS+=$(OPTS)
 ifeq ($(OPENCV), 1) 
 COMMON+= -DOPENCV
 CFLAGS+= -DOPENCV
-LDFLAGS+= `pkg-config --libs opencv` 
-COMMON+= `pkg-config --cflags opencv` 
+LDFLAGS+= `pkg-config --libs opencv2` 
+COMMON+= `pkg-config --cflags opencv2` 
 endif
 
 ifeq ($(GPU), 1) 

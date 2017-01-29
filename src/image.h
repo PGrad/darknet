@@ -15,6 +15,7 @@ typedef struct {
     float *data;
 } image;
 
+void free_alphabet(image ** alphabet);
 float get_color(int c, int x, int max);
 void flip_image(image a);
 void draw_box(image a, int x1, int y1, int x2, int y2, float r, float g, float b);

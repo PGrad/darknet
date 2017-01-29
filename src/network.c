@@ -595,6 +595,7 @@ void free_network(network net)
         free_layer(net.layers[i]);
     }
     free(net.layers);
+    free(net.workspace);
 #ifdef GPU
     if(*net.input_gpu) cuda_free(*net.input_gpu);
     if(*net.truth_gpu) cuda_free(*net.truth_gpu);

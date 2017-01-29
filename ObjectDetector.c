@@ -8,7 +8,7 @@
 #endif
 
 extern int ** get_rects(const char *datacfg, const char *cfgfile, const char *weightfile, const char *filename, float thresh);
-extern void free_rect_bounds(int ** rectBounds, int size);
+extern void free_ptrs(void ** ptrs, int size);
 JNIEXPORT jobjectArray JNICALL Java_xikuiw_volcano_hermit_analyzer_ObjectDetector_GetDarknetObjectBounds
   (JNIEnv * env, jobject this, jstring filename) {
     int ** c_rects;
@@ -22,8 +22,8 @@ JNIEXPORT jobjectArray JNICALL Java_xikuiw_volcano_hermit_analyzer_ObjectDetecto
         if(gpu_index >= 0) cuda_set_device(gpu_index);
     #endif
     const char * c_filename = (*env)->GetStringUTFChars(env, filename, NULL);
-    c_rects = get_rects("/home/pgrad/Documents/Github/darknet/cfg/voc.data", "/home/pgrad/Documents/Github/darknet/cfg/tiny-yolo-voc.cfg",
-                        "/home/pgrad/Documents/Github/darknet/weights/tiny-yolo-voc.weights", c_filename, 0.24);
+    c_rects = get_rects((char *) "cfg/voc.data", (char *) "cfg/tiny-yolo-voc.cfg",
+                        (char *) "weights/tiny-yolo-voc.weights", c_filename, 0.24);
     if(!c_rects)
         return (*env)->NewObjectArray(env, (jsize) 0, intArrayClass, NULL); 
     num_rects = sizeof(c_rects) / sizeof(int *);
@@ -34,7 +34,7 @@ JNIEXPORT jobjectArray JNICALL Java_xikuiw_volcano_hermit_analyzer_ObjectDetecto
         (*env)->SetObjectArrayElement(env, rects, (jsize) i, rect);
         (*env)->DeleteLocalRef(env, rect);
     }
-    free_rect_bounds(c_rects, num_rects);
+    free_ptrs((void **) c_rects, num_rects);
     (*env)->ReleaseStringUTFChars(env, filename, c_filename);
     (*env)->DeleteLocalRef(env, intArrayClass);
     return rects;

@@ -27,3 +27,9 @@ Thumbs.db
 *.un~
 *.class
 *.jpg
+annotation_door/
+annotation_person/
+results/
+*.class
+*.so
+*.bak

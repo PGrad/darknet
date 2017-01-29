@@ -166,7 +166,7 @@
 	{
 	    int i, j;
 	    const int nsize = 8;
-	    image **alphabets = calloc(nsize, sizeof(image));
+	    image **alphabets = calloc(nsize, sizeof(image *));
 	    for(j = 0; j < nsize; ++j){
 		alphabets[j] = calloc(128, sizeof(image));
 		for(i = 32; i < 127; ++i){
@@ -192,30 +192,20 @@
 	}
 
 int ** resize_rect_bounds(int ** rectBounds, int oldSize, int newSize) {
-    int ** newRectBounds = calloc(newSize, sizeof(int *));
+    if(oldSize == newSize)
+        return rectBounds;
+    int ** newRectBounds = (int **) calloc(newSize, sizeof(int *));
     int i, j;
     int minSize = oldSize > newSize ? newSize : oldSize;
     for(i = 0; i < minSize; ++i) {
-        newRectBounds[i] = calloc(NUM_CORNERS, sizeof(int));
-        if(rectBounds[i]) { 
+        newRectBounds[i] = (int *) calloc(NUM_CORNERS, sizeof(int));
+        if(rectBounds[i])
             for(j = 0; j < NUM_CORNERS; ++j) 
                 newRectBounds[i][j] = rectBounds[i][j];
-        }
     }
     
-    free_rect_bounds(rectBounds, oldSize);
+    free_ptrs((void **) rectBounds, oldSize);
     return newRectBounds;
-}
-
-void free_rect_bounds(int ** rectBounds, int size) {
-    int i; 
-    for(i = 0; i < size; ++i)                                                     
-        if(rectBounds[i]) {                                                          
-            free(rectBounds[i]);                                                                                                                                   
-            rectBounds[i] = 0;
-        } 
-    free(rectBounds);                                                                
-    rectBounds = 0;
 }
 
 int ** draw_detections(image im, int num, float thresh, box *boxes, float **probs, char **names, image **alphabet, int classes)
@@ -228,8 +218,6 @@ int ** draw_detections(image im, int num, float thresh, box *boxes, float **prob
         int class = max_index(probs[i], classes);
         float prob = probs[i][class];
         if(prob > thresh){
-            if(strcmp(names[class],"person") != 0)
-                continue;
             int width = im.h * .012;
 
   //          printf("%s: %.0f%%\n", names[class], prob*100);
@@ -254,10 +242,12 @@ int ** draw_detections(image im, int num, float thresh, box *boxes, float **prob
             rectBounds[pCount][0] = left;
             rectBounds[pCount][1] = top;
             rectBounds[pCount][2] = right - left;
-            rectBounds[pCount++][3] = bot - top;
+            rectBounds[pCount][3] = bot - top;
            
-            if (pCount == capacity)
+            if (++pCount == capacity) {
                 rectBounds = resize_rect_bounds(rectBounds, capacity, capacity * 2);
+                capacity = capacity * 2;
+            }
             if(left < 0) left = 0;
             if(right > im.w-1) right = im.w-1;
             if(top < 0) top = 0;
@@ -267,6 +257,7 @@ int ** draw_detections(image im, int num, float thresh, box *boxes, float **prob
             if (alphabet) {
                 image label = get_label(alphabet, names[class], (im.h*.03)/10);
                 draw_label(im, top + width, left, label, rgb);
+                free_image(label);
             }
         }
     }
@@ -1396,6 +1387,17 @@ void show_images(image *ims, int n, char *window)
     save_image(m, window);
     show_image(m, window);
     free_image(m);
+}
+
+void free_alphabet(image ** alphabet) {
+    int i, j;
+    const int nsize = 8;
+    for(j = 0; j < nsize; ++j){
+        for(i = 0; i < 128; ++i)
+            free_image(alphabet[j][i]);
+        free(alphabet[j]);
+    }
+    free(alphabet);
 }
 
 void free_image(image m)

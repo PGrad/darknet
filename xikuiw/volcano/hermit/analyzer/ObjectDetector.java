@@ -9,7 +9,7 @@ class ObjectDetector {
 		System.loadLibrary("ObjectDetector");
 	}
 	public native int[][] GetDarknetObjectBounds(String filename);
-	private static final ScheduledExecutorService ses = Executors.newScheduledThreadPool(5);
+	private static final ScheduledExecutorService ses = Executors.newScheduledThreadPool(3);
 	private static int count = 0;	
 	public static void main(String[] args) {	
 		if(args.length == 1) {         
@@ -26,12 +26,14 @@ class ObjectDetector {
 		}
 		public void run() {
 			rects = detector.GetDarknetObjectBounds(filename);
-			if(rects != null) {
-				for(int i = 0; i < rects.length; ++i)
-					for(int j = 0; j < rects[i].length; ++j)
+			int num_rects = rects.length,
+			    num_corners = 4;
+			if(rects != null)
+				for(int i = 0; i < num_rects; ++i)
+					for(int j = 0; j < num_corners; ++j)
 						System.out.println(rects[i][j]);
-			}
 			System.out.println(count++);
+			rects = null;	
 		}
 	}
 }
