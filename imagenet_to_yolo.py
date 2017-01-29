@@ -39,7 +39,7 @@ def get_bounds_from_XML(xml_file: str) -> Coords:
     return ((size_child[0], size_child[1]), (bnd_child[0], bnd_child[1], bnd_child[2] - bnd_child[0], bnd_child[3] - bnd_child[1]))
 
 
-def imagenet_to_yolo(inet_anno_dir: str, yolo_anno_dir: str, image_dir: str, class_num: int) -> None:
+def imagenet_to_yolo(inet_anno_dir: str, yolo_anno_dir: str, image_dir: str, class_num: int, class_name: str) -> None:
     inet_bbox_coords = []
     inet_names = []
     for _,_,inet_labels in walk(inet_anno_dir):
@@ -47,12 +47,12 @@ def imagenet_to_yolo(inet_anno_dir: str, yolo_anno_dir: str, image_dir: str, cla
             inet_bbox_coords.append(convert(*get_bounds_from_XML(inet_anno_dir + "/" + label)))
             inet_names.append(label.split(".")[0])
     num_labels = len(inet_names)
-    with open(yolo_anno_dir + "/annotations_" + str(class_num) + ".txt", 'w') as yolo_label_file:
-        for i in range(num_labels):
+    for i in range(num_labels):
+        with open(yolo_anno_dir + "/" + class_name + str(i + 1) + ".txt", 'w+') as yolo_label_file:
             yolo_label_file.write(str(class_num) + " " + " ".join([str(dim) for dim in inet_bbox_coords[i]]) + "\n")
     with open(train_list, "a") as train_file:
-        for name in inet_names:
-            train_file.write(image_dir + "/" + name + ".JPEG\n")
+        for i in range(num_labels):
+            train_file.write(image_dir + "/" + class_name + str(i + 1) + ".JPEG\n")
 
 if __name__=="__main__":
     imagenet_to_yolo(*argv[1:])

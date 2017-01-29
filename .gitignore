@@ -26,10 +26,15 @@ Thumbs.db
 *.swp
 *.un~
 *.class
-*.jpg
 annotation_door/
 annotation_person/
 results/
 *.class
 *.so
 *.bak
+train/annotations
+annotation_door_numbered/
+annotation_person_numbered/
+darknet19_448.conv.23
+*.pem
+*.jpg
