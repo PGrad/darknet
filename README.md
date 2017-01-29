@@ -1,3 +1,5 @@
+To build the darknet executable and shared library, just run $make in the root folder of this repo. Follow the darknet instructions for use of the binary. If you want to run the test java code, use $java xikuiw.volcano.hermit.analyzer.ObjectDetector %img file path%. The img path can be a url in a format that is accepted by OpenCV for video such as .mjpeg or it can be a filename on your host system.
+
 ![Darknet Logo](http://pjreddie.com/media/files/darknet-black-small.png)
 
 #Darknet#
